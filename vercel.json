@@ -1,4 +1,13 @@
 {
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "functions": {
+    "api/proxy/[...path].mjs": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 10,
+      "memory": 1024
+    }
+  },
   "rewrites": [
     {
       "source": "/proxy/:path*",
