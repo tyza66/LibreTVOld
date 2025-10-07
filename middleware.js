@@ -5,6 +5,18 @@ export default async function middleware(request) {
   // Get the URL from the request
   const url = new URL(request.url);
   
+  // 1) 运行时快捷跳过：所有带扩展名(且非 .html)的一律不处理，直接放行
+  const hasExtension = /\.[^/]+$/.test(url.pathname);
+  if (hasExtension && !url.pathname.endsWith('.html')) {
+    return; // 静态资源：css/js/png/svg/webp/json/map/txt 等
+  }
+
+  // 2) 再次按路径前缀跳过常见静态目录，双保险
+  const staticPrefixes = ['/css/', '/js/', '/libs/', '/image/', '/images/', '/img/', '/fonts/', '/static/'];
+  if (staticPrefixes.some((p) => url.pathname.startsWith(p))) {
+    return; // 静态目录：不进行任何处理
+  }
+  
   // Only process HTML pages
   const isHtmlPage = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
   if (!isHtmlPage) {
@@ -57,5 +69,10 @@ export default async function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/', '/((?!api|_next/static|_vercel|favicon.ico).*)'],
+  // 仅匹配需要注入环境变量的 HTML 路由；排除常见静态目录与文件
+  // 说明：这里使用负向前瞻排除静态目录，并且保留根路径与任意不含点的路径（通常是无扩展名的页面路由）
+  matcher: [
+    '/',
+    '/((?!api|_next/static|_vercel|favicon.ico|css/|js/|libs/|image/|images/|img/|fonts/|static/|robots\.txt|manifest\.json|service-worker\.js).*)'
+  ],
 };
